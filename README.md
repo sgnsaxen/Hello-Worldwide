@@ -13,3 +13,8 @@ while True:
    #contains python expressions inside braces
     clt.send(bytes("Socket Programming in Python","utf-8 ")) #to send info to clientsocket
 
+import socket
+s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((socket.gethostname(), 2346))
+msg=s.recv(1024)
+print(msg.decode("utf-8"))
