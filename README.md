@@ -1,20 +1,45 @@
 # Hello-Worldwide
 Build client/server set up
-import socket
-s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((socket.gethostname(),1234))          
-#port number can be anything between 0-65535(we usually specify non-previleged ports which are > 1023)
-s.listen(5)
- 
-while True:
-    clt,adr=s.accept()
-    print(f"Connection to {adr}established")  
-   #f string is literal string prefixed with f which 
-   #contains python expressions inside braces
-    clt.send(bytes("Socket Programming in Python","utf-8 ")) #to send info to clientsocket
+import socket 
+import threading
 
-import socket
-s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((socket.gethostname(), 2346))
-msg=s.recv(1024)
-print(msg.decode("utf-8"))
+HEADER = 64
+PORT = 5050
+SERVER = socket.gethostbyname(socket.gethostname())
+ADDR = (SERVER, PORT)
+FORMAT = 'utf-8'
+DISCONNECT_MESSAGE = "!DISCONNECT"
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(ADDR)
+
+def handle_client(conn, addr):
+    print(f"[NEW CONNECTION] {addr} connected.")
+
+    connected = True
+    while connected:
+        msg_length = conn.recv(HEADER).decode(FORMAT)
+        if msg_length:
+            msg_length = int(msg_length)
+            msg = conn.recv(msg_length).decode(FORMAT)
+            if msg == DISCONNECT_MESSAGE:
+                connected = False
+
+            print(f"[{addr}] {msg}")
+            conn.send("Msg received".encode(FORMAT))
+
+    conn.close()
+        
+
+def start():
+    server.listen()
+    print(f"[LISTENING] Server is listening on {SERVER}")
+    while True:
+        conn, addr = server.accept()
+        thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.start()
+        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+
+
+print("[STARTING] server is starting...")
+start()
